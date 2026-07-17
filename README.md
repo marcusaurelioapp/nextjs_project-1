@@ -1,70 +1,60 @@
-# Getting Started with Create React App
+# LotoSmart Pro 🎲
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+PWA de geração inteligente e simulação de jogos da **Lotofácil**. Roda no navegador (desktop ou
+celular) e pode ser instalada na tela de início como um app nativo.
 
-## Available Scripts
+> Material de origem do projeto (conversa no Gemini): [`docs/gemini-origem.md`](docs/gemini-origem.md)
 
-In the project directory, you can run:
+## Funcionalidades
 
-### `npm start`
+- **Gerador Estatístico com Filtros Customizáveis** — ligue/desligue em tempo real:
+  - Paridade equilibrada (7 ímpares × 8 pares ou 8 × 7)
+  - Números primos (5 ou 6 por jogo)
+  - Soma otimizada (entre 175 e 215 — faixa de ~78% dos sorteios históricos)
+  - Sequência máxima de números consecutivos (limite configurável)
+- **Simulador de Sorteio em Tempo Real** — gire o globo virtual, veja as dezenas douradas
+  aparecerem uma a uma e os pontos de cada cartão calculados na hora (com confete para 14/15
+  pontos 🎉).
+- **Simulador Monte Carlo** — rode 10.000 ou 100.000 sorteios virtuais em um Web Worker e
+  compare em quantos anos suas combinações inteligentes atingiriam 11/12/13/14/15 pontos versus
+  palpites 100% aleatórios.
+- **Meus Jogos** — salve suas melhores combinações no `localStorage` do aparelho.
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+## Stack
 
-The page will reload if you make edits.\
-You will also see any lint errors in the console.
+- [Vite](https://vitejs.dev/) + [React 18](https://react.dev/) + TypeScript
+- [vite-plugin-pwa](https://vite-pwa-org.netlify.app/) (manifest + service worker)
+- [canvas-confetti](https://github.com/catdad/canvas-confetti)
+- [Vitest](https://vitest.dev/) para os testes da lógica estatística
 
-### `npm test`
+## Como rodar
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+```bash
+npm install
+npm run dev      # servidor de desenvolvimento
+npm test         # testes da lógica (Vitest)
+npm run build    # build de produção (dist/)
+npm run preview  # serve o build de produção
+```
 
-### `npm run build`
+## Instalar como app no celular
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+1. Abra o site no navegador do celular (Chrome/Safari).
+2. Menu do navegador → **"Adicionar à tela de início"**.
+3. O LotoSmart Pro abre em tela cheia, como um app instalado.
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+## Estrutura
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+```
+src/
+  lib/lotofacil.ts           # constantes e lógica estatística (filtros, sorteio, acertos)
+  lib/monteCarlo.worker.ts   # simulação Monte Carlo em Web Worker (bitmask + popcount)
+  lib/storage.ts             # persistência de jogos no localStorage
+  components/                # Gerador, Simulador de Sorteio, Monte Carlo, Meus Jogos
+```
 
-### `npm run eject`
+## Aviso
 
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
-
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
-
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
-
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+Este app é uma ferramenta de estudo e entretenimento. Filtros estatísticos organizam as
+apostas segundo padrões históricos, mas **não alteram a probabilidade matemática** de nenhuma
+combinação ser sorteada. Jogue com responsabilidade.
