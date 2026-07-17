@@ -6,6 +6,11 @@ dist
 dev-dist
 *.tsbuildinfo
 
+# banco local
+server/*.db
+server/*.db-shm
+server/*.db-wal
+
 # testing
 coverage
 

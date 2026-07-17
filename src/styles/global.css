@@ -432,6 +432,80 @@ button {
   line-height: 1.5;
 }
 
+/* ---------- Administração de Resultados ---------- */
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-dim);
+}
+
+.form-field input {
+  background: var(--surface-2);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 9px 10px;
+  font-size: 14px;
+  font-family: inherit;
+  color-scheme: dark;
+}
+
+.form-field input:disabled {
+  opacity: 0.5;
+}
+
+.pick-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 38px);
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.ball.pick {
+  cursor: pointer;
+  transition:
+    background 0.15s,
+    border-color 0.15s;
+}
+
+.search-input {
+  width: 100%;
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 11px 14px;
+  font-size: 14px;
+  font-family: inherit;
+  margin-bottom: 12px;
+}
+
+.search-input::placeholder {
+  color: var(--text-dim);
+}
+
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.confirm-group {
+  display: flex;
+  gap: 8px;
+}
+
 .error-box {
   background: rgba(247, 90, 104, 0.12);
   border: 1px solid var(--danger);
