@@ -5,12 +5,14 @@ import { GeneratorPanel } from './components/GeneratorPanel';
 import { DrawSimulator } from './components/DrawSimulator';
 import { MonteCarloPanel } from './components/MonteCarloPanel';
 import { SavedGames } from './components/SavedGames';
+import { ResultsAdmin } from './components/ResultsAdmin';
 
 const TABS = [
   { id: 'generator', label: 'Gerador' },
   { id: 'draw', label: 'Sorteio' },
   { id: 'montecarlo', label: 'Monte Carlo' },
   { id: 'saved', label: 'Meus Jogos' },
+  { id: 'results', label: 'Resultados' },
 ] as const;
 
 type TabId = (typeof TABS)[number]['id'];
@@ -63,6 +65,7 @@ export default function App() {
           <MonteCarloPanel generatedGames={games} savedGames={savedGames} />
         )}
         {tab === 'saved' && <SavedGames savedGames={savedGames} onRemove={handleRemoveGame} />}
+        {tab === 'results' && <ResultsAdmin />}
       </main>
     </div>
   );

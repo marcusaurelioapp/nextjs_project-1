@@ -19,6 +19,9 @@ celular) e pode ser instalada na tela de início como um app nativo.
   compare em quantos anos suas combinações inteligentes atingiriam 11/12/13/14/15 pontos versus
   palpites 100% aleatórios.
 - **Meus Jogos** — salve suas melhores combinações no `localStorage` do aparelho.
+- **Resultados Oficiais (CRUD)** — banco **SQLite local** com todos os concursos históricos da
+  Lotofácil (3.737 sorteios importados de `data/lotofacil.xlsx`), administrado por uma API REST
+  e uma aba de gerenciamento no app (listar, buscar, adicionar, editar e excluir concursos).
 
 ## Stack
 
@@ -26,16 +29,42 @@ celular) e pode ser instalada na tela de início como um app nativo.
 - [vite-plugin-pwa](https://vite-pwa-org.netlify.app/) (manifest + service worker)
 - [canvas-confetti](https://github.com/catdad/canvas-confetti)
 - [Vitest](https://vitest.dev/) para os testes da lógica estatística
+- [Express](https://expressjs.com/) + [better-sqlite3](https://github.com/WiseLibs/better-sqlite3)
+  para a API de resultados (banco SQLite em `server/lotofacil.db`)
 
 ## Como rodar
 
 ```bash
 npm install
-npm run dev      # servidor de desenvolvimento
+npm run dev:full # API (porta 3001) + app (porta 5173) juntos
 npm test         # testes da lógica (Vitest)
 npm run build    # build de produção (dist/)
-npm run preview  # serve o build de produção
 ```
+
+Scripts individuais:
+
+```bash
+npm run server    # só a API REST (na primeira execução importa a planilha automaticamente)
+npm run dev       # só o front (proxy /api → localhost:3001)
+npm run db:import # (re)importa data/lotofacil.xlsx para o banco SQLite
+npm run preview   # serve o build de produção (proxy /api → localhost:3001)
+```
+
+Em produção, `npm run server` também serve o build da pasta `dist/` — ou seja, API + PWA em um
+único processo na porta 3001.
+
+### API REST
+
+| Método | Rota                        | Descrição                                  |
+| ------ | --------------------------- | ------------------------------------------ |
+| GET    | `/api/resultados`           | Lista paginada (`page`, `limit`, `search`) |
+| GET    | `/api/resultados/:concurso` | Busca um concurso                          |
+| POST   | `/api/resultados`           | Cria (409 se o concurso já existe)         |
+| PUT    | `/api/resultados/:concurso` | Atualiza data/dezenas                      |
+| DELETE | `/api/resultados/:concurso` | Exclui                                     |
+
+Payload: `{ "concurso": 3737, "data": "2026-07-16", "dezenas": [2,3,5,...] }` — o servidor
+valida 15 dezenas distintas entre 1 e 25.
 
 ## Instalar como app no celular
 
