@@ -22,6 +22,11 @@ celular) e pode ser instalada na tela de início como um app nativo.
 - **Resultados Oficiais (CRUD)** — banco **SQLite local** com todos os concursos históricos da
   Lotofácil (3.737 sorteios importados de `data/lotofacil.xlsx`), administrado por uma API REST
   e uma aba de gerenciamento no app (listar, buscar, adicionar, editar e excluir concursos).
+- **Estatísticas com gráficos** — dezenas mais/menos sorteadas (todas as épocas ou janela
+  recente configurável), dezenas mais atrasadas, distribuições de ímpares/primos/soma por
+  concurso, e um **palpite para o próximo sorteio** gerado por scores que combinam frequência
+  histórica, frequência recente e atraso (com aviso honesto: padrões históricos não alteram a
+  probabilidade real de nenhuma combinação).
 
 ## Stack
 
@@ -62,6 +67,7 @@ Em produção, `npm run server` também serve o build da pasta `dist/` — ou se
 | POST   | `/api/resultados`           | Cria (409 se o concurso já existe)         |
 | PUT    | `/api/resultados/:concurso` | Atualiza data/dezenas                      |
 | DELETE | `/api/resultados/:concurso` | Exclui                                     |
+| GET    | `/api/estatisticas`         | Agregados por dezena e distribuições (`janela`) |
 
 Payload: `{ "concurso": 3737, "data": "2026-07-16", "dezenas": [2,3,5,...] }` — o servidor
 valida 15 dezenas distintas entre 1 e 25.
