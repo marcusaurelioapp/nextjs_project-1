@@ -1,36 +1,49 @@
-import Database from 'better-sqlite3';
+import { createClient } from '@libsql/client';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-export const DB_PATH = process.env.LOTOSMART_DB ?? path.join(__dirname, 'lotofacil.db');
 
-export const db = new Database(DB_PATH);
-db.pragma('journal_mode = WAL');
+// Local: arquivo SQLite. Produção (Vercel): banco Turso via env vars.
+const url =
+  process.env.TURSO_DATABASE_URL ?? `file:${path.join(__dirname, 'lotofacil.db')}`;
 
-db.exec(`
-  CREATE TABLE IF NOT EXISTS resultados (
-    concurso INTEGER PRIMARY KEY,
-    data TEXT NOT NULL,
-    bola1 INTEGER NOT NULL, bola2 INTEGER NOT NULL, bola3 INTEGER NOT NULL,
-    bola4 INTEGER NOT NULL, bola5 INTEGER NOT NULL, bola6 INTEGER NOT NULL,
-    bola7 INTEGER NOT NULL, bola8 INTEGER NOT NULL, bola9 INTEGER NOT NULL,
-    bola10 INTEGER NOT NULL, bola11 INTEGER NOT NULL, bola12 INTEGER NOT NULL,
-    bola13 INTEGER NOT NULL, bola14 INTEGER NOT NULL, bola15 INTEGER NOT NULL
-  )
-`);
+export const db = createClient({
+  url,
+  authToken: process.env.TURSO_AUTH_TOKEN,
+});
 
 export const BALL_COLUMNS = Array.from({ length: 15 }, (_, i) => `bola${i + 1}`);
 
-export function countResults() {
-  return db.prepare('SELECT COUNT(*) AS n FROM resultados').get().n;
+let readyPromise;
+
+// Garante o schema uma única vez por processo/cold start
+export function initDb() {
+  readyPromise ??= db.execute(`
+    CREATE TABLE IF NOT EXISTS resultados (
+      concurso INTEGER PRIMARY KEY,
+      data TEXT NOT NULL,
+      bola1 INTEGER NOT NULL, bola2 INTEGER NOT NULL, bola3 INTEGER NOT NULL,
+      bola4 INTEGER NOT NULL, bola5 INTEGER NOT NULL, bola6 INTEGER NOT NULL,
+      bola7 INTEGER NOT NULL, bola8 INTEGER NOT NULL, bola9 INTEGER NOT NULL,
+      bola10 INTEGER NOT NULL, bola11 INTEGER NOT NULL, bola12 INTEGER NOT NULL,
+      bola13 INTEGER NOT NULL, bola14 INTEGER NOT NULL, bola15 INTEGER NOT NULL
+    )
+  `);
+  return readyPromise;
+}
+
+export async function countResults() {
+  await initDb();
+  const rs = await db.execute('SELECT COUNT(*) AS n FROM resultados');
+  return Number(rs.rows[0].n);
 }
 
 export function rowToResult(row) {
   return {
-    concurso: row.concurso,
+    concurso: Number(row.concurso),
     data: row.data,
-    dezenas: BALL_COLUMNS.map((c) => row[c]),
+    dezenas: BALL_COLUMNS.map((c) => Number(row[c])),
   };
 }
 
@@ -54,23 +67,26 @@ export function validateResult({ concurso, data, dezenas }) {
   return null;
 }
 
-const upsertStmt = db.prepare(`
+const UPSERT_SQL = `
   INSERT INTO resultados (concurso, data, ${BALL_COLUMNS.join(', ')})
-  VALUES (@concurso, @data, ${BALL_COLUMNS.map((c) => `@${c}`).join(', ')})
+  VALUES (${Array.from({ length: 17 }, () => '?').join(', ')})
   ON CONFLICT(concurso) DO UPDATE SET
     data = excluded.data,
     ${BALL_COLUMNS.map((c) => `${c} = excluded.${c}`).join(',\n    ')}
-`);
+`;
 
-export function upsertResult({ concurso, data, dezenas }) {
-  const sorted = [...dezenas].sort((a, b) => a - b);
-  const params = { concurso, data };
-  BALL_COLUMNS.forEach((c, i) => {
-    params[c] = sorted[i];
-  });
-  upsertStmt.run(params);
+function upsertArgs({ concurso, data, dezenas }) {
+  return [concurso, data, ...[...dezenas].sort((a, b) => a - b)];
 }
 
-export const upsertMany = db.transaction((results) => {
-  for (const r of results) upsertResult(r);
-});
+export async function upsertMany(results) {
+  await initDb();
+  const CHUNK = 500;
+  for (let i = 0; i < results.length; i += CHUNK) {
+    const chunk = results.slice(i, i + CHUNK);
+    await db.batch(
+      chunk.map((r) => ({ sql: UPSERT_SQL, args: upsertArgs(r) })),
+      'write',
+    );
+  }
+}
