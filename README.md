@@ -22,6 +22,11 @@ celular) e pode ser instalada na tela de início como um app nativo.
 - **Resultados Oficiais (CRUD)** — banco **SQLite local** com todos os concursos históricos da
   Lotofácil (3.737 sorteios importados de `data/lotofacil.xlsx`), administrado por uma API REST
   e uma aba de gerenciamento no app (listar, buscar, adicionar, editar e excluir concursos).
+- **Estatísticas com gráficos** — dezenas mais/menos sorteadas (todas as épocas ou janela
+  recente configurável), dezenas mais atrasadas, distribuições de ímpares/primos/soma por
+  concurso, e um **palpite para o próximo sorteio** gerado por scores que combinam frequência
+  histórica, frequência recente e atraso (com aviso honesto: padrões históricos não alteram a
+  probabilidade real de nenhuma combinação).
 
 ## Stack
 
@@ -29,8 +34,9 @@ celular) e pode ser instalada na tela de início como um app nativo.
 - [vite-plugin-pwa](https://vite-pwa-org.netlify.app/) (manifest + service worker)
 - [canvas-confetti](https://github.com/catdad/canvas-confetti)
 - [Vitest](https://vitest.dev/) para os testes da lógica estatística
-- [Express](https://expressjs.com/) + [better-sqlite3](https://github.com/WiseLibs/better-sqlite3)
-  para a API de resultados (banco SQLite em `server/lotofacil.db`)
+- [Express](https://expressjs.com/) + [@libsql/client](https://github.com/tursodatabase/libsql-client-ts)
+  para a API de resultados — SQLite local em dev (`server/lotofacil.db`) e
+  [Turso](https://turso.tech) em produção (mesma API, protocolo libSQL)
 
 ## Como rodar
 
@@ -62,6 +68,7 @@ Em produção, `npm run server` também serve o build da pasta `dist/` — ou se
 | POST   | `/api/resultados`           | Cria (409 se o concurso já existe)         |
 | PUT    | `/api/resultados/:concurso` | Atualiza data/dezenas                      |
 | DELETE | `/api/resultados/:concurso` | Exclui                                     |
+| GET    | `/api/estatisticas`         | Agregados por dezena e distribuições (`janela`) |
 
 Payload: `{ "concurso": 3737, "data": "2026-07-16", "dezenas": [2,3,5,...] }` — o servidor
 valida 15 dezenas distintas entre 1 e 25.
@@ -81,6 +88,29 @@ src/
   lib/storage.ts             # persistência de jogos no localStorage
   components/                # Gerador, Simulador de Sorteio, Monte Carlo, Meus Jogos
 ```
+
+## Publicando na Vercel
+
+A Vercel serve o frontend (build do Vite) e roda a API como função serverless
+(`api/index.js` → Express). Como serverless não tem disco persistente, o banco em produção é
+o [Turso](https://turso.tech) (SQLite hospedado, plano gratuito) — em dev nada muda, o banco
+continua sendo o arquivo local.
+
+1. **Crie o banco no Turso**: conta em [turso.tech](https://turso.tech) → crie um banco →
+   copie a URL (`libsql://…`) e gere um token de acesso.
+2. **Popule o banco na nuvem** (uma única vez, da sua máquina):
+   ```bash
+   TURSO_DATABASE_URL="libsql://SEU-BANCO.turso.io" \
+   TURSO_AUTH_TOKEN="SEU-TOKEN" \
+   npm run db:import
+   ```
+3. **Importe o repositório na Vercel**: [vercel.com](https://vercel.com) → Add New Project →
+   selecione este repositório GitHub. O `vercel.json` já configura o build do Vite e o
+   roteamento de `/api/*` para a função.
+4. **Defina as variáveis de ambiente** no projeto da Vercel (Settings → Environment
+   Variables): `TURSO_DATABASE_URL` e `TURSO_AUTH_TOKEN`.
+5. **Deploy**: a Vercel publica a branch padrão (`main`) a cada push — faça o merge da sua
+   branch de trabalho, ou configure outra branch de produção em Settings → Git.
 
 ## Aviso
 

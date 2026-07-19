@@ -11,6 +11,30 @@ export interface ResultadoPage {
   pages: number;
 }
 
+export interface DezenaStats {
+  dezena: number;
+  frequencia: number;
+  percentual: number;
+  frequenciaJanela: number;
+  atraso: number;
+  maiorAtraso: number;
+}
+
+export interface Estatisticas {
+  totalConcursos: number;
+  janela: number;
+  ultimoConcurso: Resultado;
+  dezenas: DezenaStats[];
+  distribuicoes: {
+    impares: { qtd: number; concursos: number }[];
+    primos: { qtd: number; concursos: number }[];
+    soma: {
+      bins: { de: number; ate: number; concursos: number }[];
+      faixa: { min: number; max: number; percentual: number };
+    };
+  };
+}
+
 const BASE = '/api/resultados';
 
 async function request<T>(url: string, init?: RequestInit): Promise<T> {
@@ -58,4 +82,8 @@ export function updateResultado(resultado: Resultado): Promise<Resultado> {
 
 export function deleteResultado(concurso: number): Promise<void> {
   return request<void>(`${BASE}/${concurso}`, { method: 'DELETE' });
+}
+
+export function getEstatisticas(janela: number): Promise<Estatisticas> {
+  return request<Estatisticas>(`/api/estatisticas?janela=${janela}`);
 }

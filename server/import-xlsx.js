@@ -12,7 +12,7 @@ function excelSerialToISO(serial) {
   return new Date(ms).toISOString().slice(0, 10);
 }
 
-export function importSpreadsheet() {
+export async function importSpreadsheet() {
   const workbook = xlsx.readFile(XLSX_PATH);
   const sheet = workbook.Sheets[workbook.SheetNames[0]];
   const rows = xlsx.utils.sheet_to_json(sheet, { raw: true });
@@ -32,13 +32,15 @@ export function importSpreadsheet() {
     }
   }
 
-  upsertMany(results);
+  await upsertMany(results);
   return { imported: results.length, skipped };
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
-  const { imported, skipped } = importSpreadsheet();
-  console.log(`Importados/atualizados: ${imported} concursos (total no banco: ${countResults()})`);
+  const destino = process.env.TURSO_DATABASE_URL ?? 'banco local (server/lotofacil.db)';
+  console.log(`Importando para: ${destino}`);
+  const { imported, skipped } = await importSpreadsheet();
+  console.log(`Importados/atualizados: ${imported} concursos (total no banco: ${await countResults()})`);
   if (skipped.length > 0) {
     console.warn(`Linhas ignoradas: ${skipped.length}`);
     for (const s of skipped.slice(0, 10)) console.warn(` concurso ${s.concurso}: ${s.error}`);
