@@ -4,7 +4,9 @@ import {
   countResults,
   db,
   initDb,
+  isServerless,
   rowToResult,
+  usingTurso,
   validateResult,
 } from './db.js';
 
@@ -13,7 +15,34 @@ const SUM_RANGE = { min: 175, max: 215 };
 
 const app = express();
 app.use(express.json());
-app.use(async (_req, _res, next) => {
+
+// Diagnóstico: informa qual banco está em uso e se responde
+app.get('/api/health', async (_req, res) => {
+  const info = {
+    banco: usingTurso ? 'turso' : 'arquivo local',
+    serverless: isServerless,
+    envDefinidas: {
+      TURSO_DATABASE_URL: Boolean(process.env.TURSO_DATABASE_URL),
+      TURSO_AUTH_TOKEN: Boolean(process.env.TURSO_AUTH_TOKEN),
+    },
+  };
+  try {
+    await initDb();
+    const total = await countResults();
+    res.json({ ok: true, ...info, concursos: total });
+  } catch (err) {
+    res.status(500).json({ ok: false, ...info, erro: err.message });
+  }
+});
+
+app.use(async (_req, res, next) => {
+  if (isServerless && !usingTurso) {
+    return res.status(503).json({
+      error:
+        'Banco não configurado: defina TURSO_DATABASE_URL e TURSO_AUTH_TOKEN nas ' +
+        'variáveis de ambiente da Vercel e faça um redeploy.',
+    });
+  }
   await initDb();
   next();
 });
@@ -205,10 +234,10 @@ app.delete('/api/resultados/:concurso', async (req, res) => {
   res.status(204).end();
 });
 
-// Erros não tratados das rotas async viram 500 JSON
+// Erros não tratados das rotas async viram 500 JSON com o motivo
 app.use((err, _req, res, _next) => {
   console.error(err);
-  res.status(500).json({ error: 'Erro interno do servidor.' });
+  res.status(500).json({ error: 'Erro interno do servidor.', detalhe: err.message });
 });
 
 export default app;
