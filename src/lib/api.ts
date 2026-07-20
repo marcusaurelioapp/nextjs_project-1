@@ -35,14 +35,70 @@ export interface Estatisticas {
   };
 }
 
+export interface Permissoes {
+  tabs: string[];
+  resultadosWrite: boolean;
+  maxJogos: number | null;
+}
+
+export interface AuthUser {
+  id: number;
+  nome: string;
+  email: string;
+  perfil: 'free' | 'gerador' | 'assinante' | 'gestor';
+  permissoes: Permissoes;
+}
+
+export interface LoginResponse {
+  token: string;
+  user: AuthUser;
+}
+
+export interface UsuarioRow {
+  id: number;
+  nome: string;
+  email: string;
+  perfil: string;
+  perfilNome: string;
+  created_at: string;
+}
+
+export interface SavedGameRemote {
+  id: number;
+  numeros: number[];
+  created_at: string;
+}
+
+// ---------- Token helpers ----------
+
+export const TOKEN_KEY = 'lotosmart:token';
+
+export function getToken(): string | null {
+  return localStorage.getItem(TOKEN_KEY);
+}
+
+export function setToken(token: string): void {
+  localStorage.setItem(TOKEN_KEY, token);
+}
+
+export function clearToken(): void {
+  localStorage.removeItem(TOKEN_KEY);
+}
+
+// ---------- Core fetch ----------
+
 const BASE = '/api/resultados';
 
 async function request<T>(url: string, init?: RequestInit): Promise<T> {
+  const token = getToken();
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+
   let res: Response;
   try {
     res = await fetch(url, {
-      headers: { 'Content-Type': 'application/json' },
       ...init,
+      headers: { ...headers, ...(init?.headers as Record<string, string> | undefined) },
     });
   } catch {
     throw new Error(
@@ -62,6 +118,8 @@ async function request<T>(url: string, init?: RequestInit): Promise<T> {
   if (res.status === 204) return undefined as T;
   return res.json() as Promise<T>;
 }
+
+// ---------- Resultados ----------
 
 export function listResultados(page: number, search: string): Promise<ResultadoPage> {
   const params = new URLSearchParams({ page: String(page), limit: '10' });
@@ -86,4 +144,60 @@ export function deleteResultado(concurso: number): Promise<void> {
 
 export function getEstatisticas(janela: number): Promise<Estatisticas> {
   return request<Estatisticas>(`/api/estatisticas?janela=${janela}`);
+}
+
+// ---------- Auth ----------
+
+export function login(email: string, senha: string): Promise<LoginResponse> {
+  return request<LoginResponse>('/api/auth/login', {
+    method: 'POST',
+    body: JSON.stringify({ email, senha }),
+  });
+}
+
+export function getMe(): Promise<AuthUser> {
+  return request<AuthUser>('/api/auth/me');
+}
+
+// ---------- Usuários (Gestor) ----------
+
+export function listUsuarios(): Promise<UsuarioRow[]> {
+  return request<UsuarioRow[]>('/api/usuarios');
+}
+
+export function createUsuario(data: {
+  nome: string;
+  email: string;
+  senha: string;
+  perfilSlug: string;
+}): Promise<UsuarioRow> {
+  return request<UsuarioRow>('/api/usuarios', { method: 'POST', body: JSON.stringify(data) });
+}
+
+export function updateUsuario(
+  id: number,
+  data: Partial<{ nome: string; email: string; senha: string; perfilSlug: string }>,
+): Promise<UsuarioRow> {
+  return request<UsuarioRow>(`/api/usuarios/${id}`, { method: 'PUT', body: JSON.stringify(data) });
+}
+
+export function deleteUsuario(id: number): Promise<void> {
+  return request<void>(`/api/usuarios/${id}`, { method: 'DELETE' });
+}
+
+// ---------- Meus Jogos (backend) ----------
+
+export function listMeusJogos(): Promise<SavedGameRemote[]> {
+  return request<SavedGameRemote[]>('/api/meus-jogos');
+}
+
+export function createMeuJogo(numeros: number[]): Promise<SavedGameRemote> {
+  return request<SavedGameRemote>('/api/meus-jogos', {
+    method: 'POST',
+    body: JSON.stringify({ numeros }),
+  });
+}
+
+export function deleteMeuJogo(id: number): Promise<void> {
+  return request<void>(`/api/meus-jogos/${id}`, { method: 'DELETE' });
 }

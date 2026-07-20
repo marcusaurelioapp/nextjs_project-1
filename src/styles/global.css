@@ -618,3 +618,174 @@ button {
   font-size: 13px;
   margin-bottom: 16px;
 }
+
+/* ---------- Header com usuário ---------- */
+.header-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.header-top > div:first-child {
+  text-align: left;
+}
+
+.header-user {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  flex-shrink: 0;
+}
+
+.header-user-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  white-space: nowrap;
+}
+
+.btn-sair {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  border-radius: 6px;
+  padding: 5px 12px;
+  font-size: 12px;
+  font-family: inherit;
+  cursor: pointer;
+  transition: border-color 0.2s, color 0.2s;
+}
+
+.btn-sair:hover {
+  border-color: var(--danger);
+  color: var(--danger);
+}
+
+/* ---------- Perfil Badge ---------- */
+.perfil-badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+
+.perfil-badge.free {
+  background: var(--surface-2);
+  color: var(--text-dim);
+}
+
+.perfil-badge.gerador {
+  background: rgba(0, 179, 126, 0.15);
+  color: var(--green);
+}
+
+.perfil-badge.assinante {
+  background: rgba(247, 183, 49, 0.15);
+  color: var(--gold);
+}
+
+.perfil-badge.gestor {
+  background: rgba(247, 90, 104, 0.15);
+  color: var(--danger);
+}
+
+/* ---------- Login ---------- */
+.login-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+  padding: 24px 16px;
+}
+
+.login-card {
+  width: 100%;
+  max-width: 360px;
+  background: var(--surface);
+  border-radius: 12px;
+  padding: 28px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.login-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--green);
+  text-align: center;
+}
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.login-form .form-field input {
+  font-size: 15px;
+  padding: 11px 12px;
+}
+
+.login-form .btn {
+  margin-top: 4px;
+}
+
+.login-hint {
+  font-size: 12px;
+  color: var(--text-dim);
+  text-align: center;
+  line-height: 1.5;
+}
+
+/* ---------- Admin Usuários ---------- */
+.user-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  margin-top: 12px;
+}
+
+.user-table th,
+.user-table td {
+  padding: 10px 8px;
+  text-align: left;
+  border-bottom: 1px solid var(--surface-2);
+  vertical-align: middle;
+}
+
+.user-table th {
+  color: var(--text-dim);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  background: var(--surface);
+}
+
+.user-table tbody tr:hover {
+  background: var(--surface);
+}
+
+.form-field select {
+  background: var(--surface-2);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 9px 10px;
+  font-size: 14px;
+  font-family: inherit;
+}
+
+.btn.btn-primary {
+  background: var(--green-dark);
+  color: #fff;
+}

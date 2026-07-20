@@ -9,6 +9,10 @@ import {
   usingTurso,
   validateResult,
 } from './db.js';
+import { requireAuth, requirePerfil } from './auth.js';
+import authRoutes from './routes/auth.js';
+import usuariosRoutes from './routes/usuarios.js';
+import jogosRoutes from './routes/jogos.js';
 
 const PRIMES = [2, 3, 5, 7, 11, 13, 17, 19, 23];
 const SUM_RANGE = { min: 175, max: 215 };
@@ -34,6 +38,11 @@ app.get('/api/health', async (_req, res) => {
     res.status(500).json({ ok: false, ...info, erro: err.message });
   }
 });
+
+// Rotas de autenticação e administração
+app.use('/api/auth', authRoutes);
+app.use('/api/usuarios', usuariosRoutes);
+app.use('/api/meus-jogos', jogosRoutes);
 
 app.use(async (_req, res, next) => {
   if (isServerless && !usingTurso) {
@@ -67,7 +76,8 @@ async function getByConcurso(concurso) {
   return rs.rows[0] ?? null;
 }
 
-app.get('/api/resultados', async (req, res) => {
+// Leitura de resultados: Assinante e Gestor
+app.get('/api/resultados', requireAuth, requirePerfil('assinante', 'gestor'), async (req, res) => {
   const page = Math.max(1, Number(req.query.page) || 1);
   const limit = Math.min(100, Math.max(1, Number(req.query.limit) || 20));
   const search = String(req.query.search ?? '').trim();
@@ -106,7 +116,8 @@ app.get('/api/resultados', async (req, res) => {
   });
 });
 
-app.get('/api/estatisticas', async (req, res) => {
+// Estatísticas: Assinante e Gestor
+app.get('/api/estatisticas', requireAuth, requirePerfil('assinante', 'gestor'), async (req, res) => {
   const janela = Math.min(1000, Math.max(5, Number(req.query.janela) || 50));
   const rs = await db.execute('SELECT * FROM resultados ORDER BY concurso ASC');
   const rows = rs.rows;
@@ -185,13 +196,14 @@ app.get('/api/estatisticas', async (req, res) => {
   });
 });
 
-app.get('/api/resultados/:concurso', async (req, res) => {
+app.get('/api/resultados/:concurso', requireAuth, requirePerfil('assinante', 'gestor'), async (req, res) => {
   const row = await getByConcurso(Number(req.params.concurso));
   if (!row) return res.status(404).json({ error: 'Concurso não encontrado.' });
   res.json(rowToResult(row));
 });
 
-app.post('/api/resultados', async (req, res) => {
+// Escrita de resultados: somente Gestor
+app.post('/api/resultados', requireAuth, requirePerfil('gestor'), async (req, res) => {
   const result = parseBody(req, res);
   if (!result) return;
   if (await getByConcurso(result.concurso)) {
@@ -205,7 +217,7 @@ app.post('/api/resultados', async (req, res) => {
   res.status(201).json(result);
 });
 
-app.put('/api/resultados/:concurso', async (req, res) => {
+app.put('/api/resultados/:concurso', requireAuth, requirePerfil('gestor'), async (req, res) => {
   const concurso = Number(req.params.concurso);
   if (!(await getByConcurso(concurso))) {
     return res.status(404).json({ error: 'Concurso não encontrado.' });
@@ -223,7 +235,7 @@ app.put('/api/resultados/:concurso', async (req, res) => {
   res.json(result);
 });
 
-app.delete('/api/resultados/:concurso', async (req, res) => {
+app.delete('/api/resultados/:concurso', requireAuth, requirePerfil('gestor'), async (req, res) => {
   const rs = await db.execute({
     sql: 'DELETE FROM resultados WHERE concurso = ?',
     args: [Number(req.params.concurso)],
