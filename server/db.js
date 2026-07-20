@@ -5,6 +5,9 @@ import { fileURLToPath } from 'node:url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 // Local: arquivo SQLite. Produção (Vercel): banco Turso via env vars.
+export const usingTurso = Boolean(process.env.TURSO_DATABASE_URL);
+export const isServerless = Boolean(process.env.VERCEL);
+
 const url =
   process.env.TURSO_DATABASE_URL ?? `file:${path.join(__dirname, 'lotofacil.db')}`;
 
