@@ -24,7 +24,7 @@ function emptyForm(): FormState {
   return { concurso: '', data: '', dezenas: new Set() };
 }
 
-export function ResultsAdmin() {
+export function ResultsAdmin({ readonly = false }: { readonly?: boolean }) {
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');
   const [result, setResult] = useState<ResultadoPage | null>(null);
@@ -124,17 +124,20 @@ export function ResultsAdmin() {
     <div>
       <h2 className="section-title">Resultados Oficiais</h2>
       <p className="section-hint">
-        Banco SQL local com o histórico de sorteios da Lotofácil. Adicione, corrija ou exclua
-        concursos.
+        {readonly
+          ? 'Consulte o histórico de sorteios oficiais da Lotofácil.'
+          : 'Banco SQL local com o histórico de sorteios da Lotofácil. Adicione, corrija ou exclua concursos.'}
       </p>
 
-      <div className="actions">
-        <button className="btn" onClick={openCreate} disabled={formOpen}>
-          ＋ Novo Resultado
-        </button>
-      </div>
+      {!readonly && (
+        <div className="actions">
+          <button className="btn" onClick={openCreate} disabled={formOpen}>
+            ＋ Novo Resultado
+          </button>
+        </div>
+      )}
 
-      {formOpen && (
+      {!readonly && formOpen && (
         <div className="filter-panel">
           <div className="filter-label" style={{ marginBottom: 10 }}>
             {mode.kind === 'edit'
@@ -220,7 +223,7 @@ export function ResultsAdmin() {
               label={`Concurso ${r.concurso} — ${new Date(`${r.data}T12:00:00`).toLocaleDateString('pt-BR')}`}
               numbers={r.dezenas}
               actions={
-                confirmDelete === r.concurso ? (
+                readonly ? undefined : confirmDelete === r.concurso ? (
                   <span className="confirm-group">
                     <button className="btn danger small" onClick={() => handleDelete(r.concurso)}>
                       Confirmar

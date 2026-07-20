@@ -9,6 +9,8 @@ interface GeneratorPanelProps {
   games: number[][];
   onGamesChange: (games: number[][]) => void;
   onSaveGame: (numbers: number[]) => void;
+  maxSavedGames?: number | null;
+  savedCount?: number;
 }
 
 const QUANTITIES = [1, 3, 5, 7];
@@ -19,8 +21,11 @@ export function GeneratorPanel({
   games,
   onGamesChange,
   onSaveGame,
+  maxSavedGames = null,
+  savedCount = 0,
 }: GeneratorPanelProps) {
-  const [quantity, setQuantity] = useState(3);
+  const atLimit = maxSavedGames !== null && savedCount >= maxSavedGames;
+  const [quantity, setQuantity] = useState(1);
   const [error, setError] = useState<string | null>(null);
   const [savedIndexes, setSavedIndexes] = useState<Set<number>>(new Set());
 
@@ -86,10 +91,11 @@ export function GeneratorPanel({
           actions={
             <button
               className="btn secondary small"
-              disabled={savedIndexes.has(index)}
+              disabled={savedIndexes.has(index) || atLimit}
               onClick={() => handleSave(index)}
+              title={atLimit && !savedIndexes.has(index) ? `Limite de ${maxSavedGames} jogo(s) atingido` : undefined}
             >
-              {savedIndexes.has(index) ? 'Salvo ✓' : 'Salvar'}
+              {savedIndexes.has(index) ? 'Salvo ✓' : atLimit ? 'Limite atingido' : 'Salvar'}
             </button>
           }
         />
