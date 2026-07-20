@@ -6,8 +6,8 @@
   "scripts": {
     "dev": "vite",
     "dev:full": "concurrently -n api,web -c green,cyan \"npm run server\" \"npm run dev\"",
-    "server": "node server/index.js",
-    "db:import": "node server/import-xlsx.js",
+    "server": "node --env-file-if-exists=.env server/index.js",
+    "db:import": "node --env-file-if-exists=.env server/import-xlsx.js",
     "build": "tsc -b && vite build",
     "preview": "vite preview",
     "test": "vitest run",
